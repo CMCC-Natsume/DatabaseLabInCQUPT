@@ -1,0 +1,756 @@
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 45
+Server version: 8.0.42 MySQL Community Server - GPL
+
+Copyright (c) 2000, 2025, Oracle and/or its affiliates.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+mysql> use database 订货
+ERROR 1049 (42000): Unknown database 'database'
+mysql> use 订货
+Database changed
+mysql> select * from 供应商
+    -> join 订购单 on 供应商.供应商号=订购单.供应商号
+    -> where 职工号='E1'
+    -> union
+    -> select * from 供应商
+    -> join 订购单 on 供应商.供应商号=订购单.供应商号
+    -> where 职工号='E2';
++----------+--------------+------+----------+----------+--------+---------------------+
+| 供应商号 | 供应商名     | 地址 | 订购单号 | 供应商号 | 职工号 | 订购日期            |
++----------+--------------+------+----------+----------+--------+---------------------+
+| S4       | 华通电子公司 | 北京 | OR73     | S4       | E1     | 2002-07-28 00:00:00 |
++----------+--------------+------+----------+----------+--------+---------------------+
+1 row in set (0.13 sec)
+
+mysql> select 供应商.供应商号, 供应商.供应商名, 供应商.地址
+    -> from 供应商
+    -> join 订购单 on 供应商.供应商号=订购单.供应商号
+    -> where 职工号='E1' and 地址='北京'
+    -> union
+    -> select 供应商.供应商号, 供应商.供应商名, 供应商.地址
+    -> from 供应商
+    -> join 订购单 on 供应商.供应商号=订购单.供应商号
+    -> where 职工号='E2' and 地址='北京';
++----------+--------------+------+
+| 供应商号 | 供应商名     | 地址 |
++----------+--------------+------+
+| S4       | 华通电子公司 | 北京 |
++----------+--------------+------+
+1 row in set (0.03 sec)
+
+mysql> select 供应商.供应商号, 供应商.供应商名, 供应商.地址
+    -> from 供应商
+    -> join 订购单 on 供应商.供应商号=订购单.供应商号
+    -> where 职工号='E1' and 地址='北京'
+    -> union
+    -> select 供应商.供应商号, 供应商.供应商名, 供应商.地址
+    -> from 供应商
+    -> join 订购单 on 供应商.供应商号=订购单.供应商号
+    -> where 职工号='E3' and 地址='北京';
++----------+--------------+------+
+| 供应商号 | 供应商名     | 地址 |
++----------+--------------+------+
+| S4       | 华通电子公司 | 北京 |
+| S7       | 爱华电子厂   | 北京 |
++----------+--------------+------+
+2 rows in set (0.00 sec)
+
+mysql> select 供应商.供应商号, 供应商.供应商名, 供应商.地址
+    -> from 供应商
+    -> join 订购单 on 供应商.供应商号=订购单.供应商号
+    -> where 职工号='E1' or 职工号='E3'
+    -> in(select 供应商.供应商号, 供应商.供应商名, 供应商.地址
+    -> from 供应商
+    -> join 订购单 on 供应商.供应商号=订购单.供应商号
+    -> where 供应商.地址='北京');
+ERROR 1241 (21000): Operand should contain 1 column(s)
+mysql> select 供应商.供应商号, 供应商.供应商名, 供应商.地址
+    -> from 供应商
+    -> join 订购单 on 供应商.供应商号=订购单.供应商号
+    -> where 职工号='E1' or 职工号='E3'
+    -> and 供应商.地址 in(
+    -> select 供应商.供应商号, 供应商.供应商名, 供应商.地址
+    -> from 供应商
+    -> join 订购单 on 供应商.供应商号=订购单.供应商号
+    -> where 供应商.地址='北京'
+    -> );
+ERROR 1241 (21000): Operand should contain 1 column(s)
+mysql> select 供应商.供应商号, 供应商.供应商名, 供应商.地址
+    -> from 供应商
+    -> join 订购单 on 供应商.供应商号=订购单.供应商号
+    -> where 职工号='E1' or 职工号='E3'
+    -> and 供应商.地址 in(
+    -> select 供应商.地址
+    -> from 供应商
+    -> join 订购单 on 供应商.供应商号=订购单.供应商号
+    -> where 供应商.地址='北京'
+    -> );
++----------+--------------+------+
+| 供应商号 | 供应商名     | 地址 |
++----------+--------------+------+
+| S4       | 华通电子公司 | 北京 |
+| S4       | 华通电子公司 | 北京 |
+| S7       | 爱华电子厂   | 北京 |
++----------+--------------+------+
+3 rows in set (0.01 sec)
+
+mysql> select distinct 供应商.供应商号, 供应商.供应商名, 供应商.地址
+    -> from 供应商
+    -> join 订购单 on 供应商.供应商号=订购单.供应商号
+    -> where 职工号='E1' or 职工号='E3'
+    -> and 供应商.地址 in(
+    -> select 供应商.地址
+    -> from 供应商
+    -> join 订购单 on 供应商.供应商号=订购单.供应商号
+    -> where 供应商.地址='北京'
+    -> );
++----------+--------------+------+
+| 供应商号 | 供应商名     | 地址 |
++----------+--------------+------+
+| S4       | 华通电子公司 | 北京 |
+| S7       | 爱华电子厂   | 北京 |
++----------+--------------+------+
+2 rows in set (0.02 sec)
+
+mysql> select distinct 供应商.供应商号, 供应商.供应商名, 供应商.地址
+    -> from 供应商
+    -> join 订购单 on 供应商.供应商号=订购单.供应商号
+    -> where 供应商.地址='北京'
+    -> and exists(
+    -> select 1 from 订购单
+    -> where 职工='E1'
+    -> )
+    -> and exists(
+    -> select 1 from 订购单
+    -> where 职工=E
+    -> );
+ERROR 1054 (42S22): Unknown column '职工' in 'where clause'
+mysql> select distinct 供应商.供应商号, 供应商.供应商名, 供应商.地址
+    -> from 供应商
+    -> join 订购单 on 供应商.供应商号=订购单.供应商号
+    -> where 供应商.地址='北京'
+    -> and exists(
+    -> where 职工='E1'
+    -> ^C
+mysql> select distinct 供应商.供应商号, 供应商.供应商名, 供应商.地址
+    -> from 供应商
+    -> join 订购单 on 供应商.供应商号=订购单.供应商号
+    -> where 供应商.地址='北京'
+    -> and exists(
+    -> select 1 from 订购单
+    -> where 职工='E1'
+    -> )
+    -> and exists(
+    -> select 1 from 订购单
+    -> where 职工='E2'
+    -> );
+ERROR 1054 (42S22): Unknown column '职工' in 'where clause'
+mysql> select distinct 供应商.供应商号, 供应商.供应商名, 供应商.地址
+    -> from 供应商
+    -> join 订购单 on 供应商.供应商号=订购单.供应商号
+    -> where 供应商.地址='北京'
+    -> and exists(
+    -> select 1 from 订购单
+    -> where 职工号='E1'
+    -> )
+    -> and exists(
+    -> select 1 from 订购单
+    -> where 职工号='E2'
+    -> );
+Empty set (0.01 sec)
+
+mysql> SELECT S.供应商号, S.供应商名, S.地址
+    -> FROM 供应商 S
+    -> WHERE S.地址 = '北京'
+    -> AND EXISTS (
+    ->     SELECT 1 FROM 订购单 O
+    ->     WHERE O.供应商号 = S.供应商号 AND O.职工号 = 'E1'
+    -> )
+    -> AND EXISTS (
+    ->     SELECT 1 FROM 订购单 O
+    ->     WHERE O.供应商号 = S.供应商号 AND O.职工号 = 'E3'
+    -> );
++----------+--------------+------+
+| 供应商号 | 供应商名     | 地址 |
++----------+--------------+------+
+| S4       | 华通电子公司 | 北京 |
++----------+--------------+------+
+1 row in set (0.00 sec)
+
+mysql> select 职工号 from 职工
+    -> join 仓库 on 仓库.仓库号=职工.仓库号
+    -> join 订购单 on 订购单.职工号=职工.职工号
+    -> where 仓库.城市='北京'
+    -> and 订购单.供应商号='S4';
+ERROR 1052 (23000): Column '职工号' in field list is ambiguous
+mysql> select 职工号 from 职工
+    -> ;
++--------+
+| 职工号 |
++--------+
+| E3     |
+| E7     |
+| E1     |
+| E4     |
+| E6     |
++--------+
+5 rows in set (0.00 sec)
+
+mysql> clear
+mysql> ;
+ERROR:
+No query specified
+
+mysql> select 职工.职工号
+    -> from 职工
+    -> join 仓库 on 仓库.仓库号=职工.仓库号
+    -> join 订购单 on 订购单.职工号=职工.职工号
+    -> where 仓库.城市='北京'
+    -> and exists(
+    -> select 1 from 订购单
+    -> where 订购单.订购商号='S4'
+    -> )
+    -> and not exists (
+    -> select 1 from 订购单
+    -> where 订购单.订购商号!='S4'
+    -> );
+ERROR 1054 (42S22): Unknown column '订购单.订购商号' in 'where clause'
+mysql> select 职工.职工号
+    -> from 职工
+    -> join 仓库 on 仓库.仓库号=职工.仓库号
+    -> join 订购单 on 订购单.职工号=职工.职工号
+    -> where 仓库.城市='北京'
+    -> and exists(
+    -> select 1 from 订购单
+    -> where 订购单.供应商号='S4'
+    -> )
+    -> and not exists (
+    -> select 1 from 订购单
+    -> where 订购单.供应商号!='S4'
+    -> );
+Empty set (0.01 sec)
+
+mysql> SELECT DISTINCT E.职工号
+    -> FROM 职工 E
+    -> JOIN 仓库 W ON E.仓库号 = W.仓库号
+    -> WHERE W.城市 = '北京'
+    -> AND NOT EXISTS (
+    ->     -- 检查该职工是否有发给非S4供应商的订单
+    ->     SELECT 1
+    ->     FROM 订购单 O
+    ->     WHERE O.职工号 = E.职工号
+    ->     AND O.供应商号 != 'S4'
+    ->     AND O.供应商号 IS NOT NULL  -- 排除NULL值
+    -> )
+    -> AND EXISTS (
+    ->     -- 确保该职工至少有一条发给S4的订单
+    ->     SELECT 1
+    ->     FROM 订购单 O
+    ->     WHERE O.职工号 = E.职工号
+    ->     AND O.供应商号 = 'S4'
+    -> );
++--------+
+| 职工号 |
++--------+
+| E7     |
++--------+
+1 row in set (0.01 sec)
+
+mysql> select 职工.职工号
+    -> from 职工
+    -> join 仓库 on 仓库.仓库号=职工.仓库号
+    -> where 仓库.城市='北京'
+    -> and exists(
+    -> select 1 from 职工
+    -> where 订购单.职工号=职工.职工号
+    -> and 订购单.供应商号='S4'
+    -> )
+    -> and not exists(
+    -> select 1 from 职工
+    -> where 订购单.职工号=职工.职工号
+    -> and 订购单.供应商号!='S4'
+    -> );
+ERROR 1054 (42S22): Unknown column '订购单.职工号' in 'where clause'
+mysql> select 职工.职工号
+    -> from 职工
+    -> join 仓库 on 仓库.仓库号=职工.仓库号
+    -> where 仓库.城市='北京'
+    -> and exists(
+    -> select 1 from 订购单
+    -> where 订购单.职工号=职工.职工号
+    -> and 订购单.供应商号='S4'
+    -> )
+    -> and not exists(
+    -> select 1 from 订购单
+    -> where 订购单.职工号=职工.职工号
+    -> and 订购单.供应商号!='S4'
+    -> );
++--------+
+| 职工号 |
++--------+
+| E7     |
++--------+
+1 row in set (0.00 sec)
+
+mysql> show databases;
++--------------------+
+| Database           |
++--------------------+
+| db_test            |
+| information_schema |
+| mysql              |
+| performance_schema |
+| sys                |
+| test               |
+| 订货               |
++--------------------+
+7 rows in set (0.01 sec)
+
+mysql> insert into 供应商
+    -> values('S9', '智通公司', '沈阳');
+Query OK, 1 row affected (0.02 sec)
+
+mysql> select * from 供应商;
++----------+--------------+------+
+| 供应商号 | 供应商名     | 地址 |
++----------+--------------+------+
+| S3       | 振华电子厂   | 西安 |
+| S4       | 华通电子公司 | 北京 |
+| S6       | 607厂        | 郑州 |
+| S7       | 爱华电子厂   | 北京 |
+| S9       | 智通公司     | 沈阳 |
++----------+--------------+------+
+5 rows in set (0.01 sec)
+
+mysql> select * from 供应商
+    -> join 订购单 on 供应商.订购单号=订购单.订购单号
+    -> where exist(
+    -> select 1 from 订购单号；
+    -> ；
+    -> ；
+    -> ^C
+mysql> select * from 供应商
+    -> where not exists(
+    -> select 1 from 订购单
+    -> where 供应商.供应商号=订购单.供应商号
+    -> and 订购单号 is not null
+    -> );
++----------+----------+------+
+| 供应商号 | 供应商名 | 地址 |
++----------+----------+------+
+| S6       | 607厂    | 郑州 |
+| S9       | 智通公司 | 沈阳 |
++----------+----------+------+
+2 rows in set (0.00 sec)
+
+mysql> delete from 供应商
+    -> where not exists(
+    -> select 1 from 订购单
+    -> where 供应商.供应商号=订购单.供应商号
+    -> and 订购单号 is not null
+    -> );
+Query OK, 2 rows affected (0.01 sec)
+
+mysql> select * from 供应商
+    -> ；
+    -> ;
++----------+--------------+------+
+| 供应商号 | 供应商名     | 地址 |
++----------+--------------+------+
+| S3       | 振华电子厂   | 西安 |
+| S4       | 华通电子公司 | 北京 |
+| S7       | 爱华电子厂   | 北京 |
++----------+--------------+------+
+3 rows in set (0.00 sec)
+
+mysql> select * from 订购单
+    -> where exists(
+    -> select ^C
+mysql> select * from 订购单
+    -> join 职工.职工号=订购单.职工号
+    -> join 职工 on^C
+mysql> select * from 订购单
+    -> join 职工 on 职工.职工号=订购单.职工号
+    -> join 仓库 on 仓库.仓库号=职工.仓库号
+    -> where 仓库.城市='上海';
++----------+----------+--------+---------------------+--------+--------+------+--------+------+------+
+| 订购单号 | 供应商号 | 职工号 | 订购日期            | 职工号 | 仓库号 | 工资 | 仓库号 | 城市 | 面积 |
++----------+----------+--------+---------------------+--------+--------+------+--------+------+------+
+| OR73     | S4       | E1     | 2002-07-28 00:00:00 | E1     | WH2    | 1220 | WH2    | 上海 |  500 |
+| OR80     | NULL     | E1     | NULL                | E1     | WH2    | 1220 | WH2    | 上海 |  500 |
++----------+----------+--------+---------------------+--------+--------+------+--------+------+------+
+2 rows in set (0.00 sec)
+
+mysql> select * from 订购单
+    -> where exists(
+    -> select 1 from 职工
+    -> join 仓库 on 仓库.仓库号=职工.仓库号
+    -> join 订购单 on 订购单.职工号=职工.职工号
+    -> where 仓库.城市='上海'
+    -> );
++----------+----------+--------+---------------------+
+| 订购单号 | 供应商号 | 职工号 | 订购日期            |
++----------+----------+--------+---------------------+
+| OR67     | S7       | E3     | 2002-06-23 00:00:00 |
+| OR73     | S4       | E1     | 2002-07-28 00:00:00 |
+| OR76     | S4       | E7     | 2002-05-25 00:00:00 |
+| OR77     | NULL     | E6     | NULL                |
+| OR79     | S4       | E3     | 2002-06-13 00:00:00 |
+| OR80     | NULL     | E1     | NULL                |
+| OR90     | NULL     | E3     | NULL                |
+| OR91     | S3       | E3     | 2002-07-13 00:00:00 |
++----------+----------+--------+---------------------+
+8 rows in set (0.00 sec)
+
+mysql> select * from 订购单
+    -> where exists(
+    -> select 1 from 职工
+    -> join 仓库 on 仓库.仓库号=职工.仓库号
+    -> where 订购单.职工号=职工.职工号
+    -> and 仓库.城市='上海'
+    -> );
++----------+----------+--------+---------------------+
+| 订购单号 | 供应商号 | 职工号 | 订购日期            |
++----------+----------+--------+---------------------+
+| OR73     | S4       | E1     | 2002-07-28 00:00:00 |
+| OR80     | NULL     | E1     | NULL                |
++----------+----------+--------+---------------------+
+2 rows in set (0.00 sec)
+
+mysql> delete from 订购单
+    -> where exists(
+    -> select 1 from 职工
+    -> join 仓库 on 仓库.仓库号=职工.仓库号
+    -> where 订购单.职工号=职工.职工号
+    -> and 仓库.城市='上海'
+    -> );
+Query OK, 2 rows affected (0.01 sec)
+
+mysql> select * from 订购单
+    -> ;
++----------+----------+--------+---------------------+
+| 订购单号 | 供应商号 | 职工号 | 订购日期            |
++----------+----------+--------+---------------------+
+| OR67     | S7       | E3     | 2002-06-23 00:00:00 |
+| OR76     | S4       | E7     | 2002-05-25 00:00:00 |
+| OR77     | NULL     | E6     | NULL                |
+| OR79     | S4       | E3     | 2002-06-13 00:00:00 |
+| OR90     | NULL     | E3     | NULL                |
+| OR91     | S3       | E3     | 2002-07-13 00:00:00 |
++----------+----------+--------+---------------------+
+6 rows in set (0.00 sec)
+
+mysql> update 仓库
+    -> set 面积=面积 + 100
+    -> where 城市='北京';
+Query OK, 1 row affected (0.01 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+mysql> select * from 仓库;
++--------+------+------+
+| 仓库号 | 城市 | 面积 |
++--------+------+------+
+| WH1    | 北京 |  470 |
+| WH2    | 上海 |  500 |
+| WH3    | 广州 |  200 |
+| WH4    | 武汉 |  400 |
++--------+------+------+
+4 rows in set (0.00 sec)
+
+mysql> select avg(工资) from 职工 as 平均工资;
++-----------+
+| avg(工资) |
++-----------+
+| 1232.0000 |
++-----------+
+1 row in set (0.00 sec)
+
+mysql> select avg(工资) as 平均工资 from 职工;
++-----------+
+| 平均工资  |
++-----------+
+| 1232.0000 |
++-----------+
+1 row in set (0.00 sec)
+
+mysql> update 职工
+    -> set 工资=工资*1.05
+    -> where exists(
+    -> select 1 from 职工
+    -> where 工资 < (select avg(工资) from 职工)
+    -> );
+ERROR 1093 (HY000): You can't specify target table '职工' for update in FROM clause
+mysql> update 职工
+    -> set 工资=工资*1.05
+    -> where 工资< (select avg(工资) from 职工);
+ERROR 1093 (HY000): You can't specify target table '职工' for update in FROM clause
+mysql> UPDATE 职工
+    -> SET 工资 = 工资 * 1.05
+    -> WHERE 工资 < (SELECT AVG(工资) FROM 职工);
+ERROR 1093 (HY000): You can't specify target table '职工' for update in FROM clause
+mysql> update 职工
+    -> set 工资=工资*1.05
+    -> where 工资 < (select * from (
+    -> select avg(工资) from 职工
+    -> ) as temp);
+Query OK, 3 rows affected (0.01 sec)
+Rows matched: 3  Changed: 3  Warnings: 0
+
+mysql> select * from 职工;
++--------+--------+------+
+| 职工号 | 仓库号 | 工资 |
++--------+--------+------+
+| E1     | WH2    | 1281 |
+| E3     | WH1    | 1271 |
+| E4     | WH2    | 1250 |
+| E6     | WH3    | 1292 |
+| E7     | WH1    | 1250 |
++--------+--------+------+
+5 rows in set (0.00 sec)
+
+mysql> create table 订单数量(
+    -> 职工号 varchar(20),
+    -> 订单数量 int
+    -> );
+Query OK, 0 rows affected (0.06 sec)
+
+mysql> show tables;
++----------------+
+| Tables_in_订货 |
++----------------+
+| 仓库           |
+| 供应商         |
+| 职工           |
+| 订单数量       |
+| 订购单         |
++----------------+
+5 rows in set (0.00 sec)
+
+mysql> insert into 订单数量(职工号, 订单数量)
+    -> select 职工.职工号,
+    -> count(*) from 订购单
+    -> group by 职工.职工号;
+ERROR 1054 (42S22): Unknown column '职工.职工号' in 'field list'
+mysql> insert into 订单数量(职工号, 订单数量)
+    -> select 职工号,
+    -> count(*) from 订购单
+    -> group by 职工号;
+Query OK, 3 rows affected (0.01 sec)
+Records: 3  Duplicates: 0  Warnings: 0
+
+mysql> select * from 订单数量;
++--------+----------+
+| 职工号 | 订单数量 |
++--------+----------+
+| E3     |        4 |
+| E6     |        1 |
+| E7     |        1 |
++--------+----------+
+3 rows in set (0.00 sec)
+
+mysql> select * from 订购单;
++----------+----------+--------+---------------------+
+| 订购单号 | 供应商号 | 职工号 | 订购日期            |
++----------+----------+--------+---------------------+
+| OR67     | S7       | E3     | 2002-06-23 00:00:00 |
+| OR76     | S4       | E7     | 2002-05-25 00:00:00 |
+| OR77     | NULL     | E6     | NULL                |
+| OR79     | S4       | E3     | 2002-06-13 00:00:00 |
+| OR90     | NULL     | E3     | NULL                |
+| OR91     | S3       | E3     | 2002-07-13 00:00:00 |
++----------+----------+--------+---------------------+
+6 rows in set (0.00 sec)
+
+mysql> create view 工资较低员工 as
+    -> select * from 职工
+    -> where exists(
+    -> select 1 from 职工
+    -> where 工资 < (select avg(工资) from 职工 group by 仓库号)
+    -> );
+Query OK, 0 rows affected (0.02 sec)
+
+mysql> show views;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'views' at line 1
+mysql> CREATE VIEW 工资较低员工 AS
+    -> SELECT e.*
+    -> FROM 职工 e
+    -> JOIN (
+    ->     SELECT 仓库号, AVG(工资) AS 平均工资
+    ->     FROM 职工
+    ->     GROUP BY 仓库号
+    -> ) avg_sal ON e.仓库号 = avg_sal.仓库号
+    -> WHERE e.工资 < avg_sal.平均工资;
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> select * from 职工
+    -> join 仓库 on 职工.仓库号=仓库.仓库号;
++--------+--------+------+--------+------+------+
+| 职工号 | 仓库号 | 工资 | 仓库号 | 城市 | 面积 |
++--------+--------+------+--------+------+------+
+| E3     | WH1    | 1271 | WH1    | 北京 |  470 |
+| E7     | WH1    | 1250 | WH1    | 北京 |  470 |
+| E1     | WH2    | 1281 | WH2    | 上海 |  500 |
+| E4     | WH2    | 1250 | WH2    | 上海 |  500 |
+| E6     | WH3    | 1292 | WH3    | 广州 |  200 |
++--------+--------+------+--------+------+------+
+5 rows in set (0.00 sec)
+
+mysql> select 职工.* from 职工
+    -> join 仓库 on 职工.仓库号=仓库.仓库号;
++--------+--------+------+
+| 职工号 | 仓库号 | 工资 |
++--------+--------+------+
+| E3     | WH1    | 1271 |
+| E7     | WH1    | 1250 |
+| E1     | WH2    | 1281 |
+| E4     | WH2    | 1250 |
+| E6     | WH3    | 1292 |
++--------+--------+------+
+5 rows in set (0.00 sec)
+
+mysql> create view 工资较低 as
+    -> select 职工.* from 职工
+    -> join(
+    -> select 仓库号, avg(工资)
+    -> from 职工
+    -> group by 仓库号
+    -> ) average_wage on 职工.仓库号=average_wage.仓库号
+    -> where 职工.工资<average_wage.avg(工资);
+ERROR 1630 (42000): FUNCTION average_wage.avg does not exist. Check the 'Function Name Parsing and Resolution' section in the Reference Manual
+mysql> create view 工资较低 as
+    -> select 职工.* from 职工
+    -> join(
+    -> select 仓库号, avg(工资) as 平均工资
+    -> from 职工
+    -> group by 仓库号
+    -> ) average_wage on 职工.仓库号=average_wage.仓库号
+    -> where 职工.工资<average_wage.平均工资;
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> select * from 工资较低;
++--------+--------+------+
+| 职工号 | 仓库号 | 工资 |
++--------+--------+------+
+| E4     | WH2    | 1250 |
+| E7     | WH1    | 1250 |
++--------+--------+------+
+2 rows in set (0.00 sec)
+
+mysql> l
+    -> ^C
+mysql> select 供应商.* from 供应商
+    -> where exists(
+    -> select 1 from 订购单
+    -> where 订购单.供应商号=供应商.供应商号
+    -> and 订购单 is not null
+    -> );
+ERROR 1054 (42S22): Unknown column '订购单' in 'where clause'
+mysql> select 供应商.* from 供应商
+    -> where exists(
+    -> select 1 from 订购单
+    -> where 订购单.供应商号=供应商.供应商号
+    -> and 订购单号 is null
+    -> );
+Empty set (0.00 sec)
+
+mysql> select 供应商.* from 供应商
+    -> where not exists(
+    -> select 1 from 订购单
+    -> where 订购单.供应商号=供应商.供应商号
+    -> );
+Empty set (0.00 sec)
+
+mysql> select 供应商.供应商名 from 供应商
+    -> join 订购单 on 订购单.供应商名=供应商.供应商名
+    -> join 职工 on 职工.职工号=订购单.职工号
+    -> where not exist(
+    -> select 1 from 订购单
+    -> where 订购单.供应商名=供应商.供应商名
+    -> and 职工.工资 < 1220
+    -> );
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'select 1 from 订购单
+where 订购单.供应商名=供应商.供应商名
+and ' at line 5
+mysql> select 供应商.供应商名 from 供应商
+    -> join 订购单 on 订购单.供应商名=供应商.供应商名
+    -> join 职工 on 职工.职工号=订购单.职工号^C
+mysql> where 订购单.供应商号=供应商.供应商号^C
+mysql> select 供应商.供应商名 from 供应商
+    -> where not exists(
+    -> select 1 from 订购单
+    -> join 职工 on 职工.仓库号=订购单.仓库号
+    -> where 供应商.供应商号=订购单.供应商号
+    -> and 职工.工资 < 1220
+    -> );
+ERROR 1054 (42S22): Unknown column '订购单.仓库号' in 'on clause'
+mysql> select 供应商.供应商名 from 供应商
+    -> where not exists(
+    -> select 1 from 订购单
+    -> join 职工 on 职工.职工号=订购单.职工号
+    -> where 供应商.供应商号=订购单.供应商号
+    -> and 职工.工资 < 1220
+    -> );
++--------------+
+| 供应商名     |
++--------------+
+| 振华电子厂   |
+| 华通电子公司 |
+| 爱华电子厂   |
++--------------+
+3 rows in set (0.00 sec)
+
+mysql> select 职工.工资 from 职工;
++------+
+| 工资 |
++------+
+| 1281 |
+| 1271 |
+| 1250 |
+| 1292 |
+| 1250 |
++------+
+5 rows in set (0.00 sec)
+
+mysql> select 职工.* from 职工;
++--------+--------+------+
+| 职工号 | 仓库号 | 工资 |
++--------+--------+------+
+| E1     | WH2    | 1281 |
+| E3     | WH1    | 1271 |
+| E4     | WH2    | 1250 |
+| E6     | WH3    | 1292 |
+| E7     | WH1    | 1250 |
++--------+--------+------+
+5 rows in set (0.00 sec)
+
+mysql> select 职工.* from 职工
+    -> join 订购单 on 订购单.职工号=职工.职工号
+    -> join 供应商 on 供应商.供应商号=订购单.供应商号;
++--------+--------+------+
+| 职工号 | 仓库号 | 工资 |
++--------+--------+------+
+| E3     | WH1    | 1271 |
+| E3     | WH1    | 1271 |
+| E3     | WH1    | 1271 |
+| E7     | WH1    | 1250 |
++--------+--------+------+
+4 rows in set (0.00 sec)
+
+mysql> select * from 职工
+    -> join 订购单 on 订购单.职工号=职工.职工号
+    -> join 供应商 on 供应商.供应商号=订购单.供应商号;
++--------+--------+------+----------+----------+--------+---------------------+----------+--------------+------+
+| 职工号 | 仓库号 | 工资 | 订购单号 | 供应商号 | 职工号 | 订购日期            | 供应商号 | 供应商名     | 地址 |
++--------+--------+------+----------+----------+--------+---------------------+----------+--------------+------+
+| E3     | WH1    | 1271 | OR67     | S7       | E3     | 2002-06-23 00:00:00 | S7       | 爱华电子厂   | 北京 |
+| E3     | WH1    | 1271 | OR79     | S4       | E3     | 2002-06-13 00:00:00 | S4       | 华通电子公司 | 北京 |
+| E3     | WH1    | 1271 | OR91     | S3       | E3     | 2002-07-13 00:00:00 | S3       | 振华电子厂   | 西安 |
+| E7     | WH1    | 1250 | OR76     | S4       | E7     | 2002-05-25 00:00:00 | S4       | 华通电子公司 | 北京 |
++--------+--------+------+----------+----------+--------+---------------------+----------+--------------+------+
+4 rows in set (0.00 sec)
